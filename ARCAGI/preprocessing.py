@@ -163,7 +163,7 @@ def preprocess_tasks(split, task_nums_or_task_names):
     with open(f'dataset/arc-agi_{split}_challenges.json', 'r') as f:
         problems = json.load(f)
 
-    solutions = None if split == "test" else json.load(open(f'dataset/arc-agi_{split}_solutions.json'))
+    solutions = None if "test" in split else json.load(open(f'dataset/arc-agi_{split}_solutions.json'))
     
     task_names = list(problems.keys())
     
