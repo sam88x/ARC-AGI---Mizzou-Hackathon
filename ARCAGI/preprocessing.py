@@ -163,7 +163,7 @@ def preprocess_tasks(split, task_nums_or_task_names):
 
     problems = {}
     if "example" in split:
-        with open(f'{split}.json', 'r') as f:
+        with open(f'dataset/Curve-BallDatasetTasks/{split}.json', 'r') as f:
             problem = json.load(f)
             problems[split] = problem
     else:
