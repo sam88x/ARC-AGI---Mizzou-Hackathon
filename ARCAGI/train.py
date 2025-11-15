@@ -17,6 +17,8 @@ import multiprocessing as mp
 This file trains a model for every ARC-AGI task in a split.
 """
 
+torch.set_num_threads(4)
+torch.set_num_interop_threads(2)
 np.random.seed(0)
 torch.manual_seed(0)
 torch.set_default_device('cpu')
@@ -45,6 +47,7 @@ def train_single_task(args):
     # visualization.plot_problem(train_history_logger)
 
     for train_step in range(n_iterations):
+        # print(f"Iteration - {train_step} for task - {task_num}")
         take_step(task, model, optimizer, train_step, train_history_logger)
 
     # Optional: also skip plotting here if you only care about final solutions
@@ -55,7 +58,7 @@ def train_single_task(args):
     #   - write a per-task prediction file here, or
     #   - return the logger and aggregate later.
     # Here I’ll just return the info needed to build the global submission.
-    print(f"{task_num=} Finished training...")
+    # print(f"{task_num=} Finished training...")
     return {
         "task_num": task_num,
         "solution_hash": task.solution_hash,
@@ -169,12 +172,12 @@ if __name__ == "__main__":
     start_time = time.time()
 
     split = "test"   # "training", "evaluation", or "test"
-    task_nums = list(range(120))
-    n_iterations = 2000
+    task_nums = list(range(4))
+    n_iterations = 10
 
     # How many processes you want to run in parallel.
     # On 16 vCPUs, 4–8 is usually a good starting point.
-    n_procs = 16
+    n_procs = 4
 
     # IMPORTANT on some platforms
     mp.set_start_method("spawn", force=True)

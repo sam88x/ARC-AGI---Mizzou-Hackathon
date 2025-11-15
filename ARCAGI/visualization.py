@@ -183,6 +183,8 @@ def plot_solution(logger, fname=None):
     plt.axis('off')
     if fname is None:
         fname = 'plots/' + logger.task.task_name + '_solutions.pdf'
+    if os.path.exists('plots/') is False:
+        os.makedirs('plots/', exist_ok=True)
     plt.savefig(fname, bbox_inches='tight', pad_inches=0)
     plt.close()
 
