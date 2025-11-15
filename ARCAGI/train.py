@@ -18,7 +18,7 @@ This file trains a model for every ARC-AGI task in a split.
 
 np.random.seed(0)
 torch.manual_seed(0)
-torch.set_default_device('cpu')
+torch.set_default_device('cuda')
 
 
 def mask_select_logprobs(mask, length):
@@ -127,7 +127,7 @@ def take_step(task, model, optimizer, train_step, train_history_logger):
 if __name__ == "__main__":
     start_time = time.time()
 
-    task_nums = list(range(10))
+    task_nums = list(range(400))
     split = "training"  # "training", "evaluation, or "test"
 
     # Preprocess all tasks, make models, optimizers, and loggers. Make plots.
@@ -149,7 +149,7 @@ if __name__ == "__main__":
 
     # Train the models one by one
     for i, (task, model, optimizer, train_history_logger) in enumerate(zip(tasks, models, optimizers, train_history_loggers)):
-        n_iterations = 1000
+        n_iterations = 2000
         for train_step in range(n_iterations):
             take_step(task, model, optimizer, train_step, train_history_logger)
         visualization.plot_solution(train_history_logger)

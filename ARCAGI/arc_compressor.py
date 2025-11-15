@@ -8,7 +8,7 @@ import layers
 np.random.seed(0)
 torch.manual_seed(0)
 torch.set_default_dtype(torch.float32)
-torch.set_default_device('cpu')
+torch.set_default_device('cuda')
 
 
 class ARCCompressor:

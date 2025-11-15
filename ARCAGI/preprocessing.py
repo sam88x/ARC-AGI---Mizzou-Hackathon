@@ -112,7 +112,7 @@ class Task:
                     mode_num = 0 if mode == 'input' else 1
                     self.problem[new_example_num, :, :grid.shape[1], :grid.shape[2], mode_num] = grid
 
-        self.problem = torch.from_numpy(np.argmax(self.problem, axis=1)).to('cpu')
+        self.problem = torch.from_numpy(np.argmax(self.problem, axis=1)).to(torch.get_default_device())
 
     def _create_grid_tensor(self, grid):
         return np.array([
@@ -138,7 +138,7 @@ class Task:
             solution_tensor[example_num, :, :min_x, :min_y] = grid_tensor[:, :min_x, :min_y]
 
         self.solution_hash = hash(solution_tuple)
-        return torch.from_numpy(np.argmax(solution_tensor, axis=1)).to('cpu')
+        return torch.from_numpy(np.argmax(solution_tensor, axis=1)).to(torch.get_default_device())
 
     def _compute_mask(self):
         """
@@ -153,7 +153,7 @@ class Task:
                     y_mask = np.arange(self.n_y) < shape[1]
                     self.masks[example_num, :, :, mode_num] = np.outer(x_mask, y_mask)
 
-        self.masks = torch.from_numpy(self.masks).to(torch.get_default_dtype()).to('cpu')
+        self.masks = torch.from_numpy(self.masks).to(torch.get_default_dtype()).to(torch.get_default_device())
 
 
 def preprocess_tasks(split, task_nums_or_task_names):
