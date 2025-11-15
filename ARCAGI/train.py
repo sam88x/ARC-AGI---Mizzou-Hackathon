@@ -1,7 +1,9 @@
 import time
+import os
 
 import numpy as np
 import torch
+import json
 
 import preprocessing
 import arc_compressor
@@ -206,6 +208,19 @@ if __name__ == "__main__":
     # Extract loggers / solution hashes
     train_history_loggers = [r["logger"] for r in results]
     true_solution_hashes = [r["solution_hash"] for r in results]
+
+    os.makedirs('arc_solutions', exist_ok=True)
+
+    tasks = preprocessing.preprocess_tasks(split, task_nums)
+    for task, logger in zip(tasks, train_history_loggers):
+        example_list = []
+        for example_num in range(task.n_test):
+            attempt_1 = [list(row) for row in logger.solution_most_frequent[example_num]]
+            attempt_2 = [list(row) for row in logger.solution_second_most_frequent[example_num]]
+            example_list.append({'attempt_1': attempt_1, 'attempt_2': attempt_2})
+        
+        with open(f'arc_solutions/{task.task_name}.json', 'w') as f:
+            json.dump({task.task_name: example_list}, f, indent=2)
 
     # Now that all tasks are trained, you can do the plotting & accuracy
     for logger in train_history_loggers:
