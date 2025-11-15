@@ -10,6 +10,7 @@ import multitensor_systems
 import layers
 import solution_selection
 import visualization
+import multiprocessing as mp
 
 
 """
@@ -18,8 +19,46 @@ This file trains a model for every ARC-AGI task in a split.
 
 np.random.seed(0)
 torch.manual_seed(0)
-torch.set_default_device('cuda')
+torch.set_default_device('cpu')
+# torch.set_default_device('cuda')
 
+
+def train_single_task(args):
+    """
+    Train one ARC task end-to-end in a separate process.
+    Returns (task_index, solution_hash, maybe other info).
+    """
+    split, task_num, n_iterations = args
+
+    # Preprocess just this task
+    tasks = preprocessing.preprocess_tasks(split, [task_num])
+    task = tasks[0]
+
+    # Build model / optimizer / logger just for this task
+    model = arc_compressor.ARCCompressor(task)
+    optimizer = torch.optim.Adam(model.weights_list, lr=0.01, betas=(0.5, 0.9))
+    train_history_logger = solution_selection.Logger(task)
+
+    # Optional: skip plotting inside workers if it’s heavy
+    # visualization.plot_problem(train_history_logger)
+
+    for train_step in range(n_iterations):
+        take_step(task, model, optimizer, train_step, train_history_logger)
+
+    # Optional: also skip plotting here if you only care about final solutions
+    # visualization.plot_solution(train_history_logger)
+
+    # Save predictions for this single task (into a per-task file or shared location)
+    # You can either:
+    #   - write a per-task prediction file here, or
+    #   - return the logger and aggregate later.
+    # Here I’ll just return the info needed to build the global submission.
+
+    return {
+        "task_num": task_num,
+        "solution_hash": task.solution_hash,
+        "logger": train_history_logger,
+    }
 
 def mask_select_logprobs(mask, length):
     """
@@ -127,35 +166,37 @@ def take_step(task, model, optimizer, train_step, train_history_logger):
 if __name__ == "__main__":
     start_time = time.time()
 
+    split = "test"   # "training", "evaluation", or "test"
     task_nums = list(range(120))
-    split = "test"  # "training", "evaluation, or "test"
+    n_iterations = 2000
 
-    # Preprocess all tasks, make models, optimizers, and loggers. Make plots.
-    tasks = preprocessing.preprocess_tasks(split, task_nums)
-    models = []
-    optimizers = []
-    train_history_loggers = []
-    for task in tasks:
-        model = arc_compressor.ARCCompressor(task)
-        models.append(model)
-        optimizer = torch.optim.Adam(model.weights_list, lr=0.01, betas=(0.5, 0.9))
-        optimizers.append(optimizer)
-        train_history_logger = solution_selection.Logger(task)
-        visualization.plot_problem(train_history_logger)
-        train_history_loggers.append(train_history_logger)
+    # How many processes you want to run in parallel.
+    # On 16 vCPUs, 4–8 is usually a good starting point.
+    n_procs = 4
 
-    # Get the solution hashes so that we can check for correctness
-    true_solution_hashes = [task.solution_hash for task in tasks]
+    # IMPORTANT on some platforms
+    mp.set_start_method("spawn", force=True)
 
-    # Train the models one by one
-    for i, (task, model, optimizer, train_history_logger) in enumerate(zip(tasks, models, optimizers, train_history_loggers)):
-        n_iterations = 2000
-        for train_step in range(n_iterations):
-            take_step(task, model, optimizer, train_step, train_history_logger)
-        visualization.plot_solution(train_history_logger)
-        solution_selection.save_predictions(train_history_loggers[:i+1])
-        solution_selection.plot_accuracy(true_solution_hashes)
+    # Build argument list for each task
+    args_list = [(split, task_num, n_iterations) for task_num in task_nums]
 
-    # Write down how long it all took
+    with mp.Pool(processes=n_procs) as pool:
+        results = pool.map(train_single_task, args_list)
+
+    # Reconstruct the list in the original task order
+    results.sort(key=lambda r: r["task_num"])
+
+    # Extract loggers / solution hashes
+    train_history_loggers = [r["logger"] for r in results]
+    true_solution_hashes = [r["solution_hash"] for r in results]
+
+    # Now that all tasks are trained, you can do the plotting & accuracy
+    for logger in train_history_loggers:
+        visualization.plot_solution(logger)
+
+    solution_selection.save_predictions(train_history_loggers)
+    solution_selection.plot_accuracy(true_solution_hashes)
+
     with open('timing_result.txt', 'w') as f:
         f.write("Time elapsed in seconds: " + str(time.time() - start_time))
+    print("Time elapsed in seconds:", time.time() - start_time)

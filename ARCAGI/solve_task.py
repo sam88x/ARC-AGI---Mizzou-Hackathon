@@ -43,9 +43,9 @@ def solve_task(task_name, split, time_limit, n_train_iterations, gpu_id, memory_
 
     try:  # Error catching block that puts errors on the error_queue
 
-        torch.set_default_device('cuda')
-        torch.cuda.set_device(gpu_id)
-        torch.cuda.reset_peak_memory_stats()  # Measure the memory used.
+        torch.set_default_device('cpu')
+        # torch.cuda.set_device(gpu_id)  # Disabled for CPU
+        # torch.cuda.reset_peak_memory_stats()  # Disabled for CPU  # Measure the memory used.
 
         # Get the task
         with open(f'dataset/arc-agi_{split}_challenges.json', 'r') as f:
@@ -76,11 +76,11 @@ def solve_task(task_name, split, time_limit, n_train_iterations, gpu_id, memory_
         del model
         del optimizer
         del train_history_logger
-        torch.cuda.empty_cache()
+        # torch.cuda.empty_cache()  # Disabled for CPU
         gc.collect()
 
         # Store the result
-        memory_dict[task_name] = torch.cuda.max_memory_allocated()
+        memory_dict[task_name] = 0  # CPU mode
         solutions_dict[task_name] = example_list
 
     except Exception as e:  # If error, write to the error queue
