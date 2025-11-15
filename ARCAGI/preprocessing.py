@@ -160,10 +160,17 @@ def preprocess_tasks(split, task_nums_or_task_names):
     """
     Preprocess tasks by loading problems and solutions.
     """
-    with open(f'dataset/arc-agi_{split}_challenges.json', 'r') as f:
-        problems = json.load(f)
 
-    solutions = None if "test" in split else json.load(open(f'dataset/arc-agi_{split}_solutions.json'))
+    problems = {}
+    if "example" in split:
+        with open(f'{split}.json', 'r') as f:
+            problem = json.load(f)
+            problems[split] = problem
+    else:
+        with open(f'dataset/arc-agi_{split}_challenges.json', 'r') as f:
+            problems = json.load(f)
+
+    solutions = None if ("test" in split or "example" in split) else json.load(open(f'dataset/arc-agi_{split}_solutions.json'))
     
     task_names = list(problems.keys())
     

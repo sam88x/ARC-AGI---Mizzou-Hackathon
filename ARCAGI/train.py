@@ -156,6 +156,9 @@ def take_step(task, model, optimizer, train_step, train_history_logger):
     optimizer.step()
     optimizer.zero_grad()
 
+    if train_step % 20 == 0:
+        print(f"Task {task.task_name} Step {train_step}: Loss={loss.item():.1f} ReconError={reconstruction_error.item():.1f} TotalKL={total_KL.item():.1f}")
+
     # Performance recording
     train_history_logger.log(train_step,
                              logits,
@@ -172,8 +175,8 @@ if __name__ == "__main__":
     start_time = time.time()
 
     split = "test1"   # "training", "evaluation", or "test"
-    task_nums = list(range(60))
-    n_iterations = 1001
+    task_nums = list(range(11))
+    n_iterations = 40
 
     # How many processes you want to run in parallel.
     # On 16 vCPUs, 4–8 is usually a good starting point.
@@ -183,7 +186,16 @@ if __name__ == "__main__":
     mp.set_start_method("spawn", force=True)
 
     # Build argument list for each task
-    args_list = [(split, task_num, n_iterations) for task_num in task_nums]
+    # args_list = [(split, task_num, n_iterations) for task_num in task_nums]
+    
+    args_list = []
+    for i in task_nums:
+        num = ""
+        if i + 1 // 10 == 0:
+            num = f'0{i + 1}'
+        else:
+            num = str(i + 1)
+        args_list.append((f"example{num}", i, n_iterations))
 
     with mp.Pool(processes=n_procs) as pool:
         results = pool.map(train_single_task, args_list)
