@@ -171,9 +171,9 @@ def take_step(task, model, optimizer, train_step, train_history_logger):
 if __name__ == "__main__":
     start_time = time.time()
 
-    split = "test"   # "training", "evaluation", or "test"
-    task_nums = list(range(4))
-    n_iterations = 10
+    split = "test1"   # "training", "evaluation", or "test"
+    task_nums = list(range(60))
+    n_iterations = 1001
 
     # How many processes you want to run in parallel.
     # On 16 vCPUs, 4–8 is usually a good starting point.
