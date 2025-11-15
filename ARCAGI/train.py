@@ -30,6 +30,8 @@ def train_single_task(args):
     """
     split, task_num, n_iterations = args
 
+    print(f"{task_num=} Starting training...")
+
     # Preprocess just this task
     tasks = preprocessing.preprocess_tasks(split, [task_num])
     task = tasks[0]
@@ -53,7 +55,7 @@ def train_single_task(args):
     #   - write a per-task prediction file here, or
     #   - return the logger and aggregate later.
     # Here I’ll just return the info needed to build the global submission.
-
+    print(f"{task_num=} Finished training...")
     return {
         "task_num": task_num,
         "solution_hash": task.solution_hash,
@@ -172,7 +174,7 @@ if __name__ == "__main__":
 
     # How many processes you want to run in parallel.
     # On 16 vCPUs, 4–8 is usually a good starting point.
-    n_procs = 4
+    n_procs = 16
 
     # IMPORTANT on some platforms
     mp.set_start_method("spawn", force=True)
