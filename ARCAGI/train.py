@@ -211,16 +211,17 @@ if __name__ == "__main__":
 
     os.makedirs('arc_solutions', exist_ok=True)
 
-    tasks = preprocessing.preprocess_tasks(split, task_nums)
-    for task, logger in zip(tasks, train_history_loggers):
-        example_list = []
-        for example_num in range(task.n_test):
-            attempt_1 = [list(row) for row in logger.solution_most_frequent[example_num]]
-            attempt_2 = [list(row) for row in logger.solution_second_most_frequent[example_num]]
-            example_list.append({'attempt_1': attempt_1, 'attempt_2': attempt_2})
-        
-        with open(f'arc_solutions/{task.task_name}.json', 'w') as f:
-            json.dump({task.task_name: example_list}, f, indent=2)
+    for split, _, _ in args_list:
+        tasks = preprocessing.preprocess_tasks(split, task_nums)
+        for task, logger in zip(tasks, train_history_loggers):
+            example_list = []
+            for example_num in range(task.n_test):
+                attempt_1 = [list(row) for row in logger.solution_most_frequent[example_num]]
+                attempt_2 = [list(row) for row in logger.solution_second_most_frequent[example_num]]
+                example_list.append(attempt_1)
+            
+            with open(f'arc_solutions/{task.task_name}.json', 'w') as f:
+                json.dump({task.task_name: example_list}, f, indent=2)
 
     # Now that all tasks are trained, you can do the plotting & accuracy
     for logger in train_history_loggers:
