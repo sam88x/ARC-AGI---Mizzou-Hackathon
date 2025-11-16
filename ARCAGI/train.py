@@ -37,7 +37,7 @@ def train_single_task(args):
     print(f"{task_num=} Starting training...")
 
     # Preprocess just this task
-    tasks = preprocessing.preprocess_tasks(split, [task_num])
+    tasks = preprocessing.preprocess_tasks(split, [split])
     task = tasks[0]
 
     # Build model / optimizer / logger just for this task
@@ -193,7 +193,7 @@ if __name__ == "__main__":
     args_list = []
     for i in task_nums:
         num = ""
-        if i + 1 // 10 == 0:
+        if (i + 1) // 10 == 0:
             num = f'0{i + 1}'
         else:
             num = str(i + 1)
